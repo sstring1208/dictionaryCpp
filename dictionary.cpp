@@ -1,296 +1,232 @@
-#include<iostream>
-#include<fstream>
-#include<malloc.h>
-#include<string.h>
-#define MAX 50
+#include <bits/stdc++.h>
 using namespace std;
-void wow(char *data,char * meaning);
-//////////////////////////////////////////////////
-struct MNode//this structure is created in order to insert the meaning of the particular words
-{
-		
-	char meaning[50];
-		
-};
-struct MNode* create_MNode(char *Meaning) //this will return a new node of meaning type;
-{
-	struct MNode *temp;
-	temp=(struct MNode*)malloc(sizeof(MNode));
-	strcpy(temp->meaning,Meaning);
-	return temp;
-}
 
+#define alpha 26
+struct Meaning
+{ //this struct is used to storing the meaning
 
+    string meaning;
 
-class TTree
-{
-public:
-    class Node
+    Meaning(string s)
     {
-    public:
-        char data;
-        bool isEndOfString;
-        MNode *meaningPtr;
-        Node *left, *eq, *right;
-        Node(char c)
+        meaning = s;
+    }
+};
+
+class TrieNode
+{ //this is TrieNode which will be used for,inserting the word and searching it in the tree
+
+    TrieNode *child[alpha];
+    bool isEndOfWord;
+    Meaning *p;
+
+public:
+    TrieNode()
+    {
+
+        isEndOfWord = false;
+        for (int i = 0; i < alpha; i++)
+            child[i] = NULL;
+    }
+    void insert(TrieNode *root, string word, string meaning)
+    {
+        transform(word.begin(), word.end(), word.begin(), ::tolower);
+        TrieNode *temp = root;
+
+        for (int i = 0; i < word.length(); i++)
         {
-            data = c;
-            isEndOfString = false;
-            left = nullptr;
-            eq = nullptr;
-            right = nullptr;
+            int index = word[i] - 'a';
+            if (temp->child[index] == NULL)
+                temp->child[index] = new TrieNode();
+            temp = temp->child[index];
         }
-    };
-
-    Node *root;
-
-    //void Insert1(Node **root, char *word);
-        void Insert1(Node **root, char *word,char *meaning);
-    bool Search1(Node *root, char *word);
-    void Traverse1(Node *root, char *buffer, int depth);
-
-public:
-    TTree()
-    {
-        root = nullptr;
+        temp->isEndOfWord = true;
+        temp->p = new Meaning(meaning);
     }
 
-    void Insert(char *word,char *meaning);
-    void Search(char *word);
-    void Traverse();
-
-};
-
-//void TTree::Insert1(Node **r, char *word)
-void TTree::Insert1(Node **r, char *word,char *meaning)
-{
-    Node *node = new Node(*word);
-
-    if (!(*r))
-        (*r) = node;
-
-    if ((*word) < (*r)->data)
-        //Insert1(&((*r)->left), word);
-             Insert1(&((*r)->left), word,meaning);
-
-    else if ((*word) > (*r)->data)
-      //  Insert1(&((*r)->right), word);
-      Insert1(&((*r)->right), word,meaning);
-
-    else
+    bool search(TrieNode *root, string word)
     {
-        if (*(word + 1))
-          //  Insert1(&((*r)->eq), word + 1);
-          Insert1(&((*r)->eq), word + 1,meaning);
+        transform(word.begin(), word.end(), word.begin(), ::tolower);
+        TrieNode *temp = root;
+        for (int i = 0; i < word.length(); i++)
+        {
+            int index = word[i] - 'a';
+            if (temp->child[index] == NULL)
+                return false;
 
-        else
-           {
-			 	(*r)->isEndOfString = true;
-				//(*r)->meaningPtr=create_MNode();//here if the word is entered then its meaning will also be stored in the node
-				(*r)->meaningPtr=create_MNode(meaning);
-			}
-    }
-}
-
-//void TTree::Insert(char *word)
-void TTree::Insert(char *word,char *meaning)
-{
-    for(size_t i = 0; i < strlen(word); i++)
-        word[i] = tolower(word[i]);
-  //  Insert1(&root, word);
-  Insert1(&root, word,meaning);
-    cout << "Saved:)\n";
-}
-
-bool TTree::Search1(Node *r, char *word)
-{
-    if (!r)
-    {
+            temp = temp->child[index];
+        }
+        if (temp != NULL && temp->isEndOfWord)
+        {
+        	
+            cout << "\n\nWORD:  "<< " " << word << "   MEANING: " << temp->p->meaning << endl<<endl;
+            return true;
+        }
         return false;
     }
+};
 
-    if (*word < r->data)
-        return Search1(r->left, word);
-
-    else if (*word > r->data)
-        return Search1(r->right, word);
-
-    else
-    {
-        if (*(word + 1) == '\0')
-            return r->isEndOfString;
-
-        return Search1(r->eq, word + 1);
-    }
-}
-
-void TTree::Search(char *word)
-{
-    for(size_t i = 0; i < strlen(word); i++)
-        word[i] = tolower(word[i]);
-    bool b = Search1(root, word);
-    if(!b)
-    {
-        cout << "Not Found..!\n" << "Do you want to save it..?(Y/N)\n";
-        char c[2];
-        while(1)
-        {
-            cin >> c;
-            c[0] = toupper(c[0]);
-            if(c[0] == 'Y')
-            {
-               
-             	
-             	cout<<"\n please enter the meaning also";
-			char meaning[50];
-			cin.ignore();
-			cin.getline(meaning,50);
-             	wow(word,meaning);
-      				Insert((char*)word,meaning);
-             	 break;
-        	}
-            else if(c[0] == 'N')
-            {
-                cout << "Not Saved..\n";
-                break;
-            }
-
-            else
-                cout << "Invalid Entry..!\n" << "Choose correct option(Y/N)\n";
-        }
-    }
-    else
-        cout << "Found..!\n";
-}
-
-void TTree::Traverse1(Node* r, char* buffer, int depth)
-{
-    if (r)
-    {
-        Traverse1(r->left, buffer, depth);
-        buffer[depth] = r->data;
-        if (r->isEndOfString)
-        {
-            buffer[depth + 1] = '\0';
-            
-            cout << buffer <<" "<<r->meaningPtr->meaning<<endl;
-        }
-
-        Traverse1(r->eq, buffer, depth + 1);
-
-        Traverse1(r->right, buffer, depth);
-    }
-}
-
-void TTree::Traverse()
-{
-    char buffer[MAX];
-    Traverse1(root, buffer, 0);
-}
-TTree t;
-///////////////////////////////////////////////////////////////
+ TrieNode *root=new TrieNode();
 
 class dictionary
 {
-	public:
-		char word[15];
-		char meaning[50];	
-		void getword_and_meaning(char *Word,char *Meaning)
-			{
-				strcpy(word,Word);
-				strcpy(meaning,Meaning);
-				
-			}
-		void show_word()
-			{
-				t.Insert((char*)word,(char*)meaning);
-			}
-		int storeWord();
-		void viewAllwords();
-	
-		
-};
-void dictionary::viewAllwords()
-{
-	ifstream fin;
-	fin.open("word.txt",ios::in|ios::binary);
-	fin.read((char*)this,sizeof(*this));
-	while(!fin.eof())
-	{
-		
-		show_word();
-	
-		fin.read((char*)this,sizeof(*this));
+public:
+    char word[15];
+    char mean[30];
+
+    dictionary()
+    {
+        strcpy(word, "no word");
+        strcpy(mean, "no meaning");
+    }
+
+    void setData(string a,string b)
+    {
+        strcpy(word, a.c_str());
+        strcpy(mean, b.c_str());
+        
+    }
+    
+    void show_data()
+    {
+    	
+    	cout<<"          WORD: "<<word<<"  "<<"         MEANING: "<<mean<<endl;
 	}
-	fin.close();
+
+    void make_tree()
+    {
+        string Word(word);
+        string Meaning(mean);
+        root->insert(root, Word, Meaning);
+    }
+
+    int storeWord()
+    {
+        ofstream fout;
+        fout.open("word.txt", ios::app | ios::binary);
+        fout.write((char *)this, sizeof(*this));
+        fout.close();
+        return 1;
+    }
+
+    void setWordToTree()
+    {
+        ifstream fin;
+        fin.open("word.txt", ios::in | ios::binary);
+        fin.read((char *)this, sizeof(*this));
+        while (!fin.eof())
+        {
+            make_tree();
+            fin.read((char *)this, sizeof(*this));
+        }
+        fin.close();
+    }
+    
+    void ViewStoredWords()
+    {
+    	ifstream fin;
+        fin.open("word.txt", ios::in | ios::binary);
+        fin.read((char *)this, sizeof(*this));
+        while (!fin.eof())
+        {
+            show_data();
+            fin.read((char *)this, sizeof(*this));
+        }
+        fin.close();
+	}
+};
+
+void insert_new_entry(string word)
+{
+	string mean;
+	cout<<"Enter the meaning for the word"<<endl;
+	cin>>mean;
+	root->insert(root,word,mean);
+	dictionary b;
+	b.setData(word,mean);
+	b.storeWord();
+	
 }
 
-int dictionary::storeWord()
-{
-	ofstream fout;
-	fout.open("word.txt",ios::app|ios::binary);
-	fout.write((char*)this,sizeof(*this));
-	fout.close();
-	return 1;
-}
 void insert_word()
 {
-	dictionary b;
-	b.viewAllwords();
-} 
- void wow(char *data,char * meaning)//this fucntion is used when during search the word is not found
- 
-{
-	dictionary b1;
-	
-	
-	b1.getword_and_meaning(data,meaning);
-	
-	b1.storeWord();
-}
-
+    dictionary b;
+    b.setWordToTree();
+};
 
 int menu()
 {
     int ch;
-    cout << "1.Insert" << endl;
-    cout << "2.Search" << endl;
-    cout << "3.Traverse" << endl;
-    cout << "4.Exit" << endl;
-    cout << "Enter Your Choice :";
+    
+    cout<<"_____________________________________________\n";
+    cout<<"\nPress 1 for searching word and their meaning"<<endl;
+    cout<<"Press 2 to see all the word and meaning"<<endl;
+    cout<<"Press 3 to exit"<<endl;
+    cout<<"_____________________________________________\n";
+    cout<<"enter your choice:";
     cin >> ch;
     return ch;
 }
+
 int main()
 {
-	insert_word();
-    
-    char word[MAX];
-    while(1)
+    insert_word();
+	string word;
+	dictionary b;
+	cout<<"####################################\n";
+	cout<<"       WELCOME TO DICTIONARY         \n";
+	cout<<"####################################\n";
+	
+   
+    while (1)
     {
-      system("cls");
-        switch(menu())
+        
+        
+       
+        switch (menu())
         {
-            case 1:
-             //  cout << "Enter a word :";
-              
-               // cin >> word;
-               // t.Insert((char*)word);
-              //  break;
-            case 2:
-                cout << "Enter a word :";
-                cin >> word;
-                t.Search((char*)word);
-                break;
-            case 3:
-                t.Traverse();
-                break;
-            case 4:
-                exit(0);
-            default:
-                cout<<"Invalid entry!\n";
+        
+        case 1:
+          
+          	cout<<"\n\nEnter the Word"<<endl;
+            cin >> word;
+            if (!root->search(root,word))
+            {
+                cout<<"\nSorry! The word doesn't Exist in the dictionary\n";
+                string flag;
+                cout<<"\nDo you know the meaning of the word?(Y/N):";
+                cin>>flag;
+                if(flag=="Y"||flag=="y")
+                {
+                	insert_new_entry(word);
+				}
+                
+                else{
+                	cout<<" \nOK NO PROBLEM ,try something else :)"<<endl; 
+				}
+                
+            }
+
+            break;
+        case 2:
+        	
+        	cout<<endl<<endl<<endl;
+        	cout<<"<-----##------WORDS___&___MEANING LIST------##----->\n";
+        	cout<<"_____________________________________________\n\n";
+        	
+        	b.ViewStoredWords();
+        	cout<<"_____________________________________________\n";
+        	cout<<"_____________________________________________\n\n\n";
+        
+           
+            break;
+        case 3:
+        	cout<<"<<--------##---------!!! GOOD BYE  !!!---------##-------->\n";
+            exit(0);
+        default:
+            cout << "Invalid entry!\n";
         }
-       system("pause");
+        system("pause");
     }
     return 0;
 }
